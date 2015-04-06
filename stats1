@@ -71,16 +71,13 @@ then
       #     to a new line delimted string then sorting. Then transforming
       #     back to space delimited string
       sortedRowNums=$(echo $valuesInLine | tr " " "\n" | sort | tr "\n" " ")
-      if [ $(expr $numValuesInRow % 2) -eq 1 ]
+      echo $sortedRowNums | cat >> $tempFileName
+      if [ $numValuesInRow % 2 -eq 1 ]
       then
-	 #This is odd
-	 medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
-	 rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
-      else
-	 echo "this is even" | cat >> $tempFileName
+	 echo "this is odd" | cat >> $tempFileName
       fi
 
-      echo "$rowAverage	$rowMedian" | cat >> $tempFileName
+      #echo $rowAverage | cat >> $tempFileName
    done < "${2:-/dev/stdin}" #Read from specified file or stdin
 fi
 
