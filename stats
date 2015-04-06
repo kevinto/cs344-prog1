@@ -66,6 +66,7 @@ then
       fi
 
       #------Row Median Processing---------------
+
       #Sort the numbers in the row
       #     Sort is done by transforming the space delimited string
       #     to a new line delimted string then sorting. Then transforming
@@ -77,7 +78,8 @@ then
 	 medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
 	 rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
       else
-	 echo "this is even" | cat >> $tempFileName
+	 medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
+	 rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
       fi
 
       echo "$rowAverage	$rowMedian" | cat >> $tempFileName
