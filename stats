@@ -72,15 +72,16 @@ then
       #     to a new line delimted string then sorting. Then transforming
       #     back to space delimited string
       sortedRowNums=$(echo $valuesInLine | tr " " "\n" | sort | tr "\n" " ")
-      if [ $(expr $numValuesInRow % 2) -eq 1 ]
-      then
-	 #This is odd
-	 medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
-	 rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
-      else
-	 medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
-	 rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
-      fi
+      
+
+      #Get the median
+      #     The method of grabbing the median is the same for files
+      #     with odd/even number of values. For odd number of values,
+      #     we are getting the middle number from the sorted string.
+      #     For odd number of values, we are getting the larger of 
+      #     the two middle values. 
+      medianPosition=$(expr \( $numValuesInRow / 2 \) + 1  )
+      rowMedian=$(echo $sortedRowNums | cut -d " " -f $medianPosition)
 
       echo "$rowAverage	$rowMedian" | cat >> $tempFileName
    done < "${2:-/dev/stdin}" #Read from specified file or stdin
@@ -89,7 +90,20 @@ fi
 #Process mean and median from columns
 if [ "${1:0:2}" == $colArgName ]
 then
-   echo "Implement columns processing please"
+   numValuesInRow=$(head -n 1 $2 | wc -w)
+
+   #------Column Average Processing---------------
+   echo "Averages:" | cat >> $tempFileName
+  
+   # Create a for loop that loops till numValuesInRow
+   # For each iteration use: cut -f 1 test_file1
+   # This example gets the first field.
+   for i in $(seq 1 $numValuesInRow)
+   do
+      echo "$i" | cat >> $tempFileName
+   done
+
+   #echo "$numValuesInRow" | cat >> $tempFileName
 fi
 
 cat $tempFileName
