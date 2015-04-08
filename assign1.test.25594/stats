@@ -1,10 +1,10 @@
-#!/bin/bash 
+#!/bin/bash -e
 
 #Specify temp file name
 tempFileName="tmp$$"
 
 #Set up trap for exit, interrupt, hangup, and terminate signals
-trap "rm -f $tempFileName; exit 1" INT HUP TERM
+trap "rm -f $tempFileName; exit" EXIT INT HUP TERM
 
 #Check for correct number of parameters
 correctCmdMsg="./stats {-rows|-cols} [file]"
@@ -192,4 +192,3 @@ then
 fi
 
 cat $tempFileName
-rm -f $tempFileName
