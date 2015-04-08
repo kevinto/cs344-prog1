@@ -1,15 +1,19 @@
 #!/bin/bash 
+# Filename: stats
+# Description: Calculates the mean and median of an input file.
 
 #Specify temp file name
 tempFileName="tmp$$"
 
-#Set up trap for exit, interrupt, hangup, and terminate signals
+#Set up temp file delete trap for interrupt, hangup, and terminate signals
 trap "rm -f $tempFileName; exit 1" INT HUP TERM
 
 #Check for correct number of parameters
 correctCmdMsg="./stats {-rows|-cols} [file]"
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]
 then
+   #Give an error message if there are less than 1 or greater than
+   #	two parameters
    echo $correctCmdMsg >&2
    exit 1
 fi
@@ -19,6 +23,7 @@ rowArgName="-r"
 colArgName="-c"
 if [ "${1:0:2}" != $rowArgName ] && [ "${1:0:2}" != $colArgName ]
 then
+   #Give an error message if the row/col parameter is named wrong
    echo $correctCmdMsg >&2
    exit 1
 fi
@@ -26,6 +31,7 @@ fi
 #If file is specified, check file is readable 
 if [ ! -r "$2" ] && [ "$#" -eq 2 ]
 then
+   #Give error message if file unreadable
    fileNotExistMsg="stats: cannot read $2"
    echo $fileNotExistMsg >&2
    exit 1
@@ -39,7 +45,6 @@ then
 
    while read -r line
    do
-
       numValuesInRow=$(echo $line | wc -w)
       valuesInLine=$(echo $line | tr "	" "\n")
 
@@ -49,19 +54,27 @@ then
       sumTotal=0
       for num in $valuesInLine
       do
-	 #echo "[$num]" | cat >> $tempFileName
 	 sumTotal=$(expr $sumTotal + $num) 
       done
 
       #Find the average without rounding
       rowAverage=$(expr $sumTotal / $numValuesInRow )
 
-      #Check if we need to round up (increment if we do)
+      #Check if we need to round up (increment if we do).
+      #	We will round up if the average has a decimal of
+      #	.5 or greater.
+      #	Rounding Algorithm: If double the remainder is 
+      #  greater than or equal  the number of values in the row, 
+      #  then round up. It was done this way because we
+      #	 could not use floating point functions. 
+      #  Example: 100/9 = 11r1
+      #           1/9 -> 2/18
+      #  How do you find out if 2/18 is >= .5? Half of 18
+      #  is 9. Is 2 >= 9? No. Then we dont round up.
       remainder=$(expr $sumTotal % $numValuesInRow )
       doubleRemainder=$(expr $remainder \* 2 )
       if [ "$doubleRemainder" -ge "$numValuesInRow"  ]
       then
-	 #If the double the remainder is greater than denominator then round up
 	 rowAverage=$(expr $rowAverage + 1 )
       fi
 
@@ -69,7 +82,7 @@ then
 
       #Sort the numbers in the row
       #     Sort is done by transforming the space delimited string
-      #     to a new line delimted string then sorting. Then transforming
+      #     to a new line delimited string then sorting. Then transforming
       #     back to space delimited string
       sortedRowNums=$(echo $valuesInLine | tr " " "\n" | sort -g | tr "\n" " ")
 
@@ -91,10 +104,14 @@ if [ "${1:0:2}" == $colArgName ]
 then
    if [ "$#" -eq 2 ]
    then
+      #A file name was sent in. Specify file name in head command
       numValuesInRow=$(head -n 1 $2 | wc -w)
    else
+      #Input was sent in through stdin. Don't specify file in head command
       numValuesInRow=$(head -n 1 | wc -w)
 
+      #Reformat the all column input from stdin. Add a new line for 
+      #  each row. This fixed a bug where the first row wasn't being read.'
       allColumns=""
       newSpace=$'\n'
       while read line
@@ -104,20 +121,21 @@ then
    fi
 
    #---------------------Column Average Processing-----------------------------
+
+   #Output result header
    echo "Averages:" | cat >> $tempFileName
   
-   # Create a for loop that loops till numValuesInRow
-   # For each iteration use: cut -f 1 test_file1
-   # This example gets the first field.
+   # Create a for loop that loops through all the rows
    averageResults=""
    for i in $(seq 1 $numValuesInRow)
    do
       if [ "$#" -eq 2 ]
       then
+	 #Cut out column based on specified file name
 	 columnValues=$(cut -f $i $2 | tr "\n" " ")
       else
+	 #Cut out column based on values from stdin
 	 columnValues=$(echo "$allColumns" | cut -f $i | tr "\n" " ")
-	 #echo "columnValues: $columnValues" | cat >> $tempFileName
       fi
       numValuesInCol=$(echo $columnValues | wc -w)
 
@@ -131,7 +149,17 @@ then
       #Find the average without rounding
       colAverage=$(expr $sumTotal / $numValuesInCol )
 
-      #Check if we need to round up (increment if we do)
+      #Check if we need to round up (increment if we do).
+      #	We will round up if the average has a decimal of
+      #	.5 or greater.
+      #	Rounding Algorithm: If double the remainder is 
+      #  greater than or equal  the number of values in the column, 
+      #  then round up. It was done this way because we
+      #	 could not use floating point functions. 
+      #  Example: 100/9 = 11r1
+      #           1/9 -> 2/18
+      #  How do you find out if 2/18 is >= .5? Half of 18
+      #  is 9. Is 2 >= 9? No. Then we dont round up.
       remainder=$(expr $sumTotal % $numValuesInCol )
       doubleRemainder=$(expr $remainder \* 2 )
       if [ "$doubleRemainder" -ge "$numValuesInCol"  ]
@@ -140,16 +168,23 @@ then
 	 colAverage=$(expr $colAverage + 1 )
       fi
 
+      #Save the average results for the column
       if [ $i -eq 1 ]
       then
+	 #First average, don't append a tab
 	 averageResults="$colAverage"
       else
+	 #Append a tab to all subsequent averages
 	 averageResults="$averageResults	$colAverage"
       fi
    done
+
+   #Save the averages
    echo "$averageResults" | cat >> $tempFileName
 
    #---------------------Column Median Processing-----------------------------
+
+   #Output the header
    echo "Medians:" | cat >> $tempFileName
 
    medianResults=""
@@ -157,8 +192,10 @@ then
    do
       if [ "$#" -eq 2 ]
       then
+	 #Cut out column based on specified file name
 	 columnValues=$(cut -f $i $2 | tr "\n" " ")
       else
+	 #Cut out column based on values from stdin 
 	 columnValues=$(echo "$allColumns" | cut -f $i | tr "\n" " ")
       fi
       numValuesInCol=$(echo $columnValues | wc -w)
@@ -167,7 +204,6 @@ then
       #     Sort is done by transforming the space delimited string
       #     to a new line delimted string then sorting. Then transforming
       #     back to space delimited string
-      #sortedColNums=$(echo $columnValues | tr " " "\n" | sort | tr "\n" " ")
       sortedColNums=$(echo $columnValues | tr " " "\n" | sort -g | tr "\n" " ")
 
       #Get the median
@@ -181,15 +217,20 @@ then
 
       if [ $i -eq 1 ]
       then
+	 #First median, don't append a tab
 	 medianResults="$colMedian"
       else
+	 #Append a tab to all subsequent medians 
 	 medianResults="$medianResults	$colMedian"
       fi
    
    done
+
+   #Save all median results
    echo "$medianResults" | cat >> $tempFileName
 
 fi
 
+#Output all results and remove temp file
 cat $tempFileName
 rm -f $tempFileName

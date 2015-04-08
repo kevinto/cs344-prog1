@@ -3,12 +3,12 @@ Creating file1 file2 file3 file4 file5
 
 
 total 40
--rw-rw----. 1 toke upg54298  259 Apr  8 08:52 file1
--rw-rw----. 1 toke upg54298   49 Apr  8 08:52 file2
--rw-rw----. 1 toke upg54298    3 Apr  8 08:52 file3
--rw-rw----. 1 toke upg54298    0 Apr  8 08:52 file4
--rw-rw----. 1 toke upg54298 5831 Apr  8 08:52 file5
--rwxrwx---. 1 toke upg54298 5834 Apr  8 08:52 stats
+-rw-rw----. 1 toke upg54298  259 Apr  8 12:33 file1
+-rw-rw----. 1 toke upg54298   49 Apr  8 12:33 file2
+-rw-rw----. 1 toke upg54298    3 Apr  8 12:33 file3
+-rw-rw----. 1 toke upg54298    0 Apr  8 12:33 file4
+-rw-rw----. 1 toke upg54298 5831 Apr  8 12:33 file5
+-rwxrwx---. 1 toke upg54298 7566 Apr  8 12:33 stats
 
 
 --------------------------------------------------------------------------
@@ -299,16 +299,16 @@ file3
 file4
 file5
 stats
-tmp12576
+tmp7700
 
   PID TTY          TIME CMD
- 7965 pts/28   00:00:00 p1gradingscript
- 7966 pts/28   00:00:00 cat
-12576 pts/28   00:00:00 stats
-14919 pts/28   00:00:00 ps
-24667 pts/28   00:00:00 tcsh
+ 3049 pts/64   00:00:00 tcsh
+ 3117 pts/64   00:00:00 p1gradingscript
+ 3118 pts/64   00:00:00 cat
+ 7700 pts/64   00:00:00 stats
+10092 pts/64   00:00:00 ps
 
-killing process: 12576
+killing process: 7700
 
 After Kill: 8 points if no temp files
 file1
@@ -319,9 +319,9 @@ file5
 stats
 
   PID TTY          TIME CMD
- 7965 pts/28   00:00:00 p1gradingscript
- 7966 pts/28   00:00:00 cat
-14965 pts/28   00:00:00 ps
-24667 pts/28   00:00:00 tcsh
+ 3049 pts/64   00:00:00 tcsh
+ 3117 pts/64   00:00:00 p1gradingscript
+ 3118 pts/64   00:00:00 cat
+10137 pts/64   00:00:00 ps
 
 
