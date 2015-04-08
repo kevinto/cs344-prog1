@@ -1,13 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 #Specify temp file name
-tempFileName=tmp$$
+tempFileName="tmp$$"
 
-#Set up trap for interrupt, hangup, and terminate signals
-trap "rm -f $tempFileName" INT HUP TERM EXIT
+#Set up trap for exit, interrupt, hangup, and terminate signals
+trap "rm -f $tempFileName; exit" EXIT INT HUP TERM
 
 #Check for correct number of parameters
-correctCmdMsg="Usage: stats {-rows|-cols} [file]"
+correctCmdMsg="./stats {-rows|-cols} [file]"
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]
 then
    echo $correctCmdMsg >&2
@@ -71,8 +71,7 @@ then
       #     Sort is done by transforming the space delimited string
       #     to a new line delimted string then sorting. Then transforming
       #     back to space delimited string
-      sortedRowNums=$(echo $valuesInLine | tr " " "\n" | sort | tr "\n" " ")
-      
+      sortedRowNums=$(echo $valuesInLine | tr " " "\n" | sort -g | tr "\n" " ")
 
       #Get the median
       #     The method of grabbing the median is the same for files
@@ -90,20 +89,106 @@ fi
 #Process mean and median from columns
 if [ "${1:0:2}" == $colArgName ]
 then
-   numValuesInRow=$(head -n 1 $2 | wc -w)
+   if [ "$#" -eq 2 ]
+   then
+      numValuesInRow=$(head -n 1 $2 | wc -w)
+   else
+      numValuesInRow=$(head -n 1 | wc -w)
 
-   #------Column Average Processing---------------
+      allColumns=""
+      newSpace=$'\n'
+      while read line
+      do
+	 allColumns="$allColumns$newSpace$line"
+      done < /dev/stdin
+   fi
+
+   #---------------------Column Average Processing-----------------------------
    echo "Averages:" | cat >> $tempFileName
   
    # Create a for loop that loops till numValuesInRow
    # For each iteration use: cut -f 1 test_file1
    # This example gets the first field.
+   averageResults=""
    for i in $(seq 1 $numValuesInRow)
    do
-      echo "$i" | cat >> $tempFileName
-   done
+      if [ "$#" -eq 2 ]
+      then
+	 columnValues=$(cut -f $i $2 | tr "\n" " ")
+      else
+	 columnValues=$(echo "$allColumns" | cut -f $i | tr "\n" " ")
+	 #echo "columnValues: $columnValues" | cat >> $tempFileName
+      fi
+      numValuesInCol=$(echo $columnValues | wc -w)
 
-   #echo "$numValuesInRow" | cat >> $tempFileName
+      #Find the sum total of the column 
+      sumTotal=0
+      for num in $columnValues
+      do
+	 sumTotal=$(expr $sumTotal + $num) 
+      done
+
+      #Find the average without rounding
+      colAverage=$(expr $sumTotal / $numValuesInCol )
+
+      #Check if we need to round up (increment if we do)
+      remainder=$(expr $sumTotal % $numValuesInCol )
+      doubleRemainder=$(expr $remainder \* 2 )
+      if [ "$doubleRemainder" -ge "$numValuesInCol"  ]
+      then
+	 #If the double the remainder is greater than denominator then round up
+	 colAverage=$(expr $colAverage + 1 )
+      fi
+
+      if [ $i -eq 1 ]
+      then
+	 averageResults="$colAverage"
+      else
+	 averageResults="$averageResults	$colAverage"
+      fi
+   done
+   echo "$averageResults" | cat >> $tempFileName
+
+   #---------------------Column Median Processing-----------------------------
+   echo "Medians:" | cat >> $tempFileName
+
+   medianResults=""
+   for i in $(seq 1 $numValuesInRow)
+   do
+      if [ "$#" -eq 2 ]
+      then
+	 columnValues=$(cut -f $i $2 | tr "\n" " ")
+      else
+	 columnValues=$(echo "$allColumns" | cut -f $i | tr "\n" " ")
+      fi
+      numValuesInCol=$(echo $columnValues | wc -w)
+
+      #Sort the numbers in the row
+      #     Sort is done by transforming the space delimited string
+      #     to a new line delimted string then sorting. Then transforming
+      #     back to space delimited string
+      #sortedColNums=$(echo $columnValues | tr " " "\n" | sort | tr "\n" " ")
+      sortedColNums=$(echo $columnValues | tr " " "\n" | sort -g | tr "\n" " ")
+
+      #Get the median
+      #     The method of grabbing the median is the same for files
+      #     with odd/even number of values. For odd number of values,
+      #     we are getting the middle number from the sorted string.
+      #     For odd number of values, we are getting the larger of 
+      #     the two middle values. 
+      medianPosition=$(expr \( $numValuesInCol / 2 \) + 1  )
+      colMedian=$(echo $sortedColNums | cut -d " " -f $medianPosition)
+
+      if [ $i -eq 1 ]
+      then
+	 medianResults="$colMedian"
+      else
+	 medianResults="$medianResults	$colMedian"
+      fi
+   
+   done
+   echo "$medianResults" | cat >> $tempFileName
+
 fi
 
 cat $tempFileName

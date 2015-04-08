@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#Specify temp file name
+tempFileName=tmp$$
+
+#Set up trap for interrupt, hangup, and terminate signals
+trap "rm -f $tempFileName" INT HUP TERM EXIT
+
+teststring="hello there"
+echo $teststring | cat > $tempFileName
+while true
+do
+   a=1
+done

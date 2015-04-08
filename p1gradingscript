@@ -1,13 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ASSIGN1.TEST
 #
 # To create a test run of your program put this file and your stats
 # program, which must be named "stats", together in a directory.  Then run
-# the command "sh assign1.test > test_script".  This test will take several
-# minutes to complete
+# this command, which will take perhaps 15 seconds:
 #
-# % assign1.test > test_script
+# % p1gradingscript > p1results
 #
 # Your whole program must be contained in the single file named "stats".
 #
@@ -287,7 +286,8 @@ $LS 2>&1
 echo
 $PS
 echo
-kill $PID
+echo "killing process: $PID"
+kill -s SIGTERM $PID
 sleep 5
 echo
 echo After Kill: 8 points if no temp files
