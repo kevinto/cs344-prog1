@@ -1,5 +1,6 @@
 #!/bin/bash 
 # Filename: stats
+# By: Kevin To
 # Description: Calculates the mean and median of an input file.
 
 #Specify temp file name
